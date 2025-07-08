@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Handwritten Math Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f7fafc;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e2e8f0;
+        }
+
+        .input-panel {
+            display: none;
+            padding: 20px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .input-panel.active {
+            display: block;
+            border-color: #667eea;
+            background: #f8faff;
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background: #e6f3ff;
+        }
+
+        .upload-area.dragover {
+            background: #d6f5d6;
+            border-color: #48bb78;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .solve-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .solve-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .solve-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8faff;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-value {
+            font-family: 'Courier New', monospace;
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            word-break: break-word;
+        }
+
+        .solution-highlight {
+            background: #e6fffa;
+            border: 2px solid #38b2ac;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .steps-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .steps-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .steps-list li:last-child {
+            border-bottom: none;
+        }
+
+        .error {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f56565;
+            margin: 10px 0;
+        }
+
+        .success {
+            color: #38a169;
+            background: #c6f6d5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #68d391;
+            margin: 10px 0;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .examples {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid #0ea5e9;
+        }
+
+        .examples h4 {
+            color: #0369a1;
+            margin-bottom: 10px;
+        }
+
+        .examples ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .examples li {
+            padding: 5px 0;
+            font-family: 'Courier New', monospace;
+            color: #0369a1;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .tab-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧮 AI Math Solver</h1>
+            <p>Upload handwritten math problems and get instant solutions!</p>
+        </div>
+
+        <div class="input-section">
+            <div class="tab-container">
+                <button class="tab active" onclick="switchTab('image')">📸 Upload Image</button>
+                <!-- <button class="tab" onclick="switchTab('text')">✏️ Type Expression</button> -->
+            </div>
+
+            <div id="image-panel" class="input-panel active">
+                <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">📤</div>
+                    <h3>Drop your image here or click to browse</h3>
+                    <p>Supports JPG, PNG, and other image formats</p>
+                    <input type="file" id="file-input" class="file-input" accept="image/*" onchange="handleFileSelect(event)">
+                </div>
+                <div id="image-preview"></div>
+            </div>
+
+            <div id="text-panel" class="input-panel">
+                <textarea id="text-input" class="text-input" placeholder="Enter your math expression here..."></textarea>
+                <div class="examples">
+                    <h4>📚 Example Expressions:</h4>
+                    <ul>
+                        <li>• 2*x + 5 = 13</li>
+                        <li>• x**2 - 4*x + 3 = 0</li>
+                        <li>• 3*4 + 2*5</li>
+                        <li>• sqrt(16) + 2**3</li>
+                        <li>• sin(pi/2) + cos(0)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button id="solve-btn" class="solve-btn" onclick="solveMath()">
+                🔍 Solve Math Problem
+            </button>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Processing your math problem...</p>
+        </div>
+
+        <div id="result-section" class="result-section">
+            <h3 style="margin-bottom: 20px; color: #4a5568;">📊 Solution Results</h3>
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'image';
+        let selectedFile = null;
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+            
+            // Update panels
+            document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`${tab}-panel`).classList.add('active');
+            
+            currentTab = tab;
+            
+            // Clear previous results
+            document.getElementById('result-section').classList.remove('active');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('image-preview');
+                    preview.innerHTML = `<img src="${e.target.result}" class="preview-image" alt="Selected image">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Drag and drop functionality
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    selectedFile = file;
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('image-preview');
+                        preview.innerHTML = `<img src="${e.target.result}" class="preview-image" alt="Dropped image">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        async function solveMath() {
+            const solveBtn = document.getElementById('solve-btn');
+            const loading = document.getElementById('loading');
+            const resultSection = document.getElementById('result-section');
+            
+            // Show loading
+            solveBtn.disabled = true;
+            loading.classList.add('active');
+            resultSection.classList.remove('active');
+            
+            try {
+                let response;
+                
+                if (currentTab === 'image') {
+                    if (!selectedFile) {
+                        throw new Error('Please select an image first');
+                    }
+                    
+                    // Convert image to base64
+                    const base64 = await fileToBase64(selectedFile);
+                    
+                    response = await fetch('/api/solve', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            image: base64,
+                            format: selectedFile.type.split('/')[1]
+                        })
+                    });
+                } else {
+                    const expression = document.getElementById('text-input').value.trim();
+                    if (!expression) {
+                        throw new Error('Please enter a math expression');
+                    }
+                    
+                    response = await fetch('/api/solve-text', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            expression: expression
+                        })
+                    });
+                }
+                
+                const data = await response.json();
+                displayResult(data);
+                
+            } catch (error) {
+                displayError(error.message);
+            } finally {
+                // Hide loading
+                solveBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function displayResult(data) {
+            const resultSection = document.getElementById('result-section');
+            const resultContent = document.getElementById('result-content');
+            
+            if (data.error) {
+                resultContent.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+            } else {
+                let html = '';
+                
+                // Success message
+                if (data.success) {
+                    html += `<div class="success">✅ Successfully processed your math problem!</div>`;
+                }
+                
+                // Raw OCR text (for image input)
+                if (data.raw_ocr_text && currentTab === 'image') {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-label">🔍 Raw OCR Text:</div>
+                            <div class="result-value">${data.raw_ocr_text}</div>
+                        </div>
+                    `;
+                }
+                
+                // Recognized/Cleaned Expression
+                if (data.original_expression) {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-label">📝 Recognized Expression:</div>
+                            <div class="result-value">${data.original_expression}</div>
+                        </div>
+                    `;
+                }
+                
+                // Expression Type
+                if (data.expression_type) {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-label">🏷️ Expression Type:</div>
+                            <div class="result-value">${data.expression_type}</div>
+                        </div>
+                    `;
+                }
+                
+                // Main Solution
+                if (data.solution !== null && data.solution !== undefined) {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-label">🎯 Solution:</div>
+                            <div class="result-value solution-highlight">${data.solution}</div>
+                        </div>
+                    `;
+                }
+                
+                // Solution Steps
+                if (data.steps && data.steps.length > 0) {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-label">📋 Solution Steps:</div>
+                            <div class="result-value">
+                                <ul class="steps-list">
+                                    ${data.steps.map(step => `<li>${step}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                resultContent.innerHTML = html;
+            }
+            
+            resultSection.classList.add('active');
+        }
+
+        function displayError(message) {
+            const resultSection = document.getElementById('result-section');
+            const resultContent = document.getElementById('result-content');
+            
+            resultContent.innerHTML = `<div class="error">❌ Error: ${message}</div>`;
+            resultSection.classList.add('active');
+        }
+
+        // Add some example expressions to text input on focus
+        document.getElementById('text-input').addEventListener('focus', function() {
+            if (this.value === '') {
+                this.placeholder = 'Try: 2*x + 5 = 13';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+opencv-python
+pytesseract
+Pillow
+sympy
+flask
+flask-cors
+numpy
+requests
+google-generativeai
