@@ -20,7 +20,7 @@ This project is a web-based application that recognizes handwritten mathematical
 ### Steps
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/Basavask/image-math-hand-written-recong.git
+   git clone https://github.com/ruthuAI/AI-Handwritten-Math-Solver.git
    cd image-math-hand-written-recong
    git checkout develop
    ```
