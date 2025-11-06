@@ -33,7 +33,7 @@ This project is a web-based application that recognizes handwritten mathematical
    python src/app.py
    ```
 4. **Access the Web Interface**:
-   - Open your browser and navigate to `http://localhost:5000`.
+   - Open your browser and navigate to `http://localhost:5001`.
 
 ## Usage
 1. **Upload an Image**:
